@@ -318,21 +318,6 @@ stock LastCheck(const id, const when)
 		BubbleSort(LAST);
 }
 
-stock SkipCheck(const id)
-{
-	if(!equali(id_name[id], target_names[0]) && !equali(id_name[id], target_ip[0]))
-		return false;
-	
-	new pw[LEN_FLEX+1];
-	
-	get_user_info(id, "_pw-home", pw, LEN_FLEX);
-	
-	if(equali(pw, target_flex[0]))
-		return true;
-		
-	return false;
-}
-
 stock UnixToString(const timestamp, const type)
 {
 	new tm[64], iYear, iMonth, iDay, iHour, iMinute, iSecond;

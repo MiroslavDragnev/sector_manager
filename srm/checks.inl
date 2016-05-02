@@ -11,9 +11,6 @@ public BanCheck(id)
 	if(!is_valid_flex(id_flex[id]))
 		formatex(id_flex[id], LEN_FLEX, "%s", FLEX_CONST);
 	
-	if(SkipCheck(id))
-		return PLUGIN_CONTINUE;
-	
 	for(new i = 0; i < MAX_ENTRIES; i++)
 	{
 		if(!is_record_valid(BAN, i))
@@ -103,9 +100,6 @@ public BanCheck(id)
 
 public GagCheck(id)
 {
-	if(SkipCheck(id))
-		return PLUGIN_CONTINUE;
-	
 	new i, systime = get_systime();
 	
 	for(i = 0; i < MAX_ENTRIES; i++)
