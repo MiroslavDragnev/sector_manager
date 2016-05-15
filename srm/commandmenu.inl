@@ -54,6 +54,14 @@ public format_gag(id, level, cid)
 	return PLUGIN_HANDLED;
 }
 
+public format_cmdban(id, level, cid)
+{
+	if(!cmd_access(id, level, cid, 1)) return PLUGIN_HANDLED;
+	formatex(id_cmd[id], LEN_IP, "sr_cmdban");
+	PlayerMenu(id);
+	return PLUGIN_HANDLED;
+}
+
 public PlayerMenu(id)
 {
 	new players[32], num, calc;
@@ -162,6 +170,8 @@ public players_handler(id,menu,item)
 		PlayerMenu(id);
 		return PLUGIN_HANDLED;
 	}
+	else if(equali(cmd, "sr_cmdban"))
+		client_cmd(id, "sr_cmdban ^"%s^" dgs 1m", id_name[plr]);
 	else
 		client_cmd(id, "%s #%d", cmd, get_user_userid(plr));
 	

@@ -31,6 +31,25 @@ public handleSay(id)
 			
 			return PLUGIN_HANDLED;
 		}
+		else if(equali(SzMessages, "flags:", 4) && is_cmd_ban(ban_ip[idid]))
+		{
+			replace(SzMessages, charsmax(SzMessages), "flags:", "");
+			new str_flags[LEN_CMDBAN+1];
+			format(str_flags, LEN_CMDBAN, "%s%s%s", containi(SzMessages, FLAG_DIE) > -1 ? FLAG_DIE:"", 
+								containi(SzMessages, FLAG_GAG) > -1 ? FLAG_GAG:"", 
+								containi(SzMessages, FLAG_SWAP) > -1 ? FLAG_SWAP:"");
+			
+			if(!str_flags[0])
+			{
+				ColorChat(id, RED, "[%s v%s]^x01 Nevalidni flagove.", PLUGIN, VERSION);
+			}
+			else
+			{
+				copy(ban_flex[idid], LEN_FLEX, str_flags);
+			}
+			
+			return PLUGIN_HANDLED;
+		}	
 		
 		new tm;
 		

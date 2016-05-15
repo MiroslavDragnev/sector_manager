@@ -158,10 +158,24 @@ public cmdCmdBan(id, level, cid)
 	read_argv(2, arg3, LEN_CMDBAN);
 	read_argv(3, arg2, LEN_TIME);
 	
-	new player = cmd_target(id, arg, CMDTARGET_NO_BOTS);
+	/*new player = cmd_target(id, arg, CMDTARGET_NO_BOTS);
 	
 	if(player)
-		formatex(arg, LEN_NAME, "%s", id_name[player]);
+		formatex(arg, LEN_NAME, "%s", id_name[player]);*/
+	
+	new player;
+	
+	for(new i = 1; i <= maxplayers; i++)
+	{
+		if(!is_user_connected(i))
+			continue;
+		
+		if(equali(id_name[i], arg))
+		{
+			player = i;
+			break;
+		}
+	}
 	
 	format(arg3, LEN_CMDBAN, "%s%s%s", containi(arg3, FLAG_DIE) > -1 ? FLAG_DIE:"", containi(arg3, FLAG_GAG) > -1 ? FLAG_GAG:"", containi(arg3, FLAG_SWAP) > -1 ? FLAG_SWAP:"");
 	
@@ -181,7 +195,7 @@ public cmdCmdBan(id, level, cid)
 		return PLUGIN_HANDLED;
 	}
 	
-	new tm = determine_multiplier(arg2, id, BAN, STARTED, API_OFF);
+	new tm = determine_multiplier(arg2, id, BAN, player == 0 ? PAUSED:STARTED, API_OFF);
 	
 	if(!tm)
 	{

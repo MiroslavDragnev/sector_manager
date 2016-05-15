@@ -18,7 +18,7 @@ public cmdBanList(id, level, cid)
 			formatex(item, charsmax(item), "\d%s: %s\w%s", UnixToString(ban_ts[i], SHORT_DATE), is_cmd_ban(ban_ip[i]) == 1?"\r(\wCMD\r)\w ":"", ban_names[i]);
 		else
 			formatex(item, charsmax(item), "\d%s: %s\y%s", UnixToString(ban_ts[i], SHORT_DATE), is_cmd_ban(ban_ip[i]) == 1?"\r(\wCMD\r)\w ":"", ban_names[i]);
-		
+		            
 		num_to_str(count, count_str, 2);
 		
 		menu_additem(menu, item, count_str, 0);
@@ -40,12 +40,11 @@ public banlist_handler(id,menu,item)
 		return PLUGIN_HANDLED
 	}
 	
-	new access,callback, info[3], num;
+	new access,callback, info[3];
 	menu_item_getinfo(menu,item,access, info,2, _,_, callback)
 	
-	num = str_to_num(info);
-	c_index[id] = menu_indexes[id][num-1];
-	id_page[id][BAN] = num / 7;
+	c_index[id] = menu_indexes[id][item];
+	id_page[id][BAN] = item / 7;
 	ban_details[id] = true;
 	BanDetails(id);
 	menu_destroy(menu);
@@ -58,7 +57,7 @@ public BanDetails(id)
 	if(!ban_details[id])
 		return PLUGIN_HANDLED;
 	
-	new title[384], timeleft[33], dd, hh, mm, ss, stemp, network[LEN_IP+1], since[64];
+	new title[384], timeleft[33], stemp, network[LEN_IP+1], since[64];
 	
 	new idid = c_index[id];
 	new systime = get_systime();
@@ -96,15 +95,7 @@ public BanDetails(id)
 			stemp = -1*ban_time[idid];
 		}
 		
-		dd = stemp / 86400;
-		stemp -= dd*86400;
-		hh = stemp / 3600;
-		stemp -= hh*3600;
-		mm = stemp / 60;
-		stemp -= mm*60;
-		ss = stemp;
-			
-		formatex(timeleft, charsmax(timeleft), "%i:%s%i:%s%i:%s%i", dd, hh > 9 ? "":"0", hh, mm > 9 ? "":"0", mm, ss > 9 ? "":"0", ss);
+		timeleft = GetPunishmentTimeleft(stemp);
 	}
 	
 	if(iscmd)
@@ -125,29 +116,32 @@ public BanDetails(id)
 		menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
 		menu_additem(menu, "\wZatvori menuto^n", "2", 0);
 		
-		if(isvalidip)
-		{
-			menu_additem(menu, "\wPremahni bana", "3", 0);
+		menu_additem(menu, "\wPremahni bana", "3", 0);
 			
-			if(isnetwork) menu_additem(menu, "\wPremahni bana na mrejata^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "4", 0);
-			else menu_additem(menu, "\wBanni mrejata^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "4", 0);
-		}
-		else
-		{
-			menu_additem(menu, "\wPremahni bana^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "3", 0);
-		}
+		if(isnetwork) menu_additem(menu, "\wPremahni bana na mrejata^n", "4", 0);
+		else isvalidip == 1 ? menu_additem(menu, "\wBanni mrejata^n", "4", 0) : menu_additem(menu, "\dBanni mrejata^n", "4", 0);
+		
+		menu_additem(menu, "\wKopirai v konzolata", "5", 0);
 	}
 	else if(equali(id_name[id], ban_admin[idid]) && get_pcvar_num(vote_ban) && id_flags[id] & ADMIN_VOTE)
 	{
 		menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
 		menu_additem(menu, "\wZatvori menuto^n", "2", 0);
 		
-		menu_additem(menu, "\wPremahni bana^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "3", 0);
+		menu_additem(menu, "\wPremahni bana", "3", 0);
+		menu_additem(menu, "\dBanni mrejata^n", "4", 0);
+		
+		menu_additem(menu, "\wKopirai v konzolata", "5", 0);
 	}
 	else
 	{
 		menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
-		menu_additem(menu, "\wZatvori menuto", "2", 0);
+		menu_additem(menu, "\wZatvori menuto^n", "2", 0);
+		
+		menu_additem(menu, "\dPremahni bana", "3", 0);
+		menu_additem(menu, "\dBanni mrejata^n", "4", 0);
+		
+		menu_additem(menu, "\wKopirai v konzolata", "5", 0);
 	}
 	
 	menu_setprop(menu, MPROP_EXIT, MEXIT_NEVER);
@@ -180,7 +174,12 @@ public bandetails_handler( id, menu, item )
 		
 		case 3:
 		{
-			new still_exists, idid = c_index[id], iscmd = is_cmd_ban(ban_ip[idid]);
+			new idid = c_index[id];
+			
+			if(!(id_flags[id] & ADMIN_BAN) && (!equali(id_name[id], ban_admin[idid]) || !get_pcvar_num(vote_ban)))
+				return PLUGIN_HANDLED;
+			
+			new still_exists, iscmd = is_cmd_ban(ban_ip[idid]);
 			
 			ban_time[idid] = 1;
 			
@@ -222,8 +221,11 @@ public bandetails_handler( id, menu, item )
 		}
 		
 		case 4:
-		{		
+		{	
 			new idid = c_index[id];
+		
+			if(!(id_flags[id] & ADMIN_BAN) || !is_valid_ip(ban_ip[idid]))
+				return PLUGIN_HANDLED;
 		
 			if(is_network_punishment(ban_ip[idid]))
 			{
@@ -245,6 +247,11 @@ public bandetails_handler( id, menu, item )
 				log_to_file(srm_log, "%s banned network %s", id_name[id], get_network(ban_ip[idid]));
 				#endif
 			}
+		}
+		
+		case 5:
+		{
+			CopyToConsole(id, BAN);
 		}
 	}
 	
@@ -295,12 +302,11 @@ public gaglist_handler(id,menu,item)
 		return PLUGIN_HANDLED
 	}
 	
-	new access,callback, info[3], num;
+	new access,callback, info[3];
 	menu_item_getinfo(menu,item,access, info,2, _,_, callback)
 	
-	num = str_to_num(info);
-	c_index[id] = menu_indexes[id][num-1];
-	id_page[id][GAG] = num / 7;
+	c_index[id] = menu_indexes[id][item];
+	id_page[id][GAG] = item / 7;
 	gag_details[id] = true;
 	GagDetails(id);
 	menu_destroy(menu);
@@ -313,7 +319,7 @@ public GagDetails(id)
 	if(!gag_details[id])
 		return PLUGIN_HANDLED;
 	
-	new title[384], timeleft[33], dd, hh, mm, ss, stemp, network[LEN_IP+1], since[64];
+	new title[384], timeleft[33], stemp, network[LEN_IP+1], since[64];
 	
 	new idid = c_index[id];
 	new systime = get_systime();
@@ -350,15 +356,7 @@ public GagDetails(id)
 			stemp = -1*gag_time[idid];
 		}
 		
-		dd = stemp / 86400;
-		stemp -= dd*86400;
-		hh = stemp / 3600;
-		stemp -= hh*3600;
-		mm = stemp / 60;
-		stemp -= mm*60;
-		ss = stemp;
-			
-		formatex(timeleft, charsmax(timeleft), "%i:%s%i:%s%i:%s%i", dd, hh > 9 ? "":"0", hh, mm > 9 ? "":"0", mm, ss > 9 ? "":"0", ss);
+		timeleft = GetPunishmentTimeleft(stemp);
 	}
 
 	if(started) formatex(title, charsmax(title), "\rName: \w%s^n\rFlexID: \w%s^n\rIP: \w%s^n\rGagged on: \w%s^n\rTime left: \w%s^n\rGagged by: \w%s^n\rReason: \w%s", gag_names[idid], gag_flex[idid], isnetwork ? network:gag_ip[idid], since, timeleft, gag_admin[idid], gag_reason[idid]);
@@ -371,30 +369,32 @@ public GagDetails(id)
 		menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
 		menu_additem(menu, "\wZatvori menuto^n", "2", 0);
 		
-		if(isvalidip)
-		{
-			menu_additem(menu, "\wPremahni gaga", "3", 0);
+		menu_additem(menu, "\wPremahni gaga", "3", 0);
 			
-			if(isnetwork) menu_additem(menu, "\wPremahni gaga na mrejata^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "4", 0);
-			else menu_additem(menu, "\wGagni mrejata^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "4", 0);
-		}
-		else
-		{
-			menu_additem(menu, "\wPremahni gaga^n^nZa da promenish Time left,^nnapishi nova stoinost v chata", "3", 0);
-		}
+		if(isnetwork) menu_additem(menu, "\wPremahni gaga na mrejata^n", "4", 0);
+		else isvalidip == 1 ? menu_additem(menu, "\wGagni mrejata^n", "4", 0) : menu_additem(menu, "\dGagni mrejata^n", "4", 0);
 		
+		menu_additem(menu, "\wKopirai v konzolata", "5", 0);
 	}
 	else if(equali(id_name[id], gag_admin[idid]) && get_pcvar_num(vote_gag) && id_flags[id] & ADMIN_VOTE)
 	{
 		menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
 		menu_additem(menu, "\wZatvori menuto^n", "2", 0);
 		
-		menu_additem(menu, "\wPremahni gaga^n^nZa da promenish Timeleft,^nnapishi nova stoinost v chata", "3", 0);
+		menu_additem(menu, "\wPremahni gaga", "3", 0);
+		menu_additem(menu, "\dGagni mrejata^n", "4", 0);
+		
+		menu_additem(menu, "\wKopirai v konzolata", "5", 0);
 	}
 	else
 	{
 		menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
-		menu_additem(menu, "\wZatvori menuto", "2", 0);
+		menu_additem(menu, "\wZatvori menuto^n", "2", 0);
+		
+		menu_additem(menu, "\dPremahni gaga", "3", 0);
+		menu_additem(menu, "\dGagni mrejata^n", "4", 0);
+		
+		menu_additem(menu, "\wKopirai v konzolata", "5", 0);
 	}
 	
 	menu_setprop(menu, MPROP_EXIT, MEXIT_NEVER);
@@ -429,6 +429,9 @@ public gagdetails_handler( id, menu, item )
 		{
 			new idid = c_index[id];
 			
+			if(!(id_flags[id] & ADMIN_BAN) && (!equali(id_name[id], gag_admin[idid]) || !get_pcvar_num(vote_gag)))
+				return PLUGIN_HANDLED;
+			
 			gag_time[idid] = 1;
 			
 			new still_exists = SecondaryCheck(GAG, gag_names[idid], gag_flex[idid], gag_ip[idid]);
@@ -457,6 +460,9 @@ public gagdetails_handler( id, menu, item )
 		{		
 			new idid = c_index[id];
 		
+			if(!(id_flags[id] & ADMIN_BAN) || !is_valid_ip(gag_ip[idid]))
+				return PLUGIN_HANDLED;
+		
 			if(is_network_punishment(gag_ip[idid]))
 			{
 				replace(gag_ip[idid], LEN_IP, "x", "");
@@ -477,6 +483,11 @@ public gagdetails_handler( id, menu, item )
 				log_to_file(srm_log, "%s gagned network %s", id_name[id], get_network(gag_ip[idid]));
 				#endif
 			}
+		}
+		
+		case 5:
+		{
+			CopyToConsole(id, GAG);
 		}
 	}
 	
@@ -564,33 +575,32 @@ public lastlist_handler(id,menu,item)
 		return PLUGIN_HANDLED
 	}
 	
-	new access,callback, info[3], num;
+	new access,callback, info[3];
 	menu_item_getinfo(menu,item,access, info,2, _,_, callback)
 	
 	new key[LEN_NAME+1];
 	copy(key, LEN_NAME, last_search_key[id]);
 	new searched = key[0] == 0 ? false : true;
 	
-	num = str_to_num(info);
-	
-	if(num == 1)
+	if(item == 0)
 	{
 		client_cmd(id, "messagemode _____SEARCH_FOR");
 		last_search_key[id][0] = 0;
 	}
-	else if(num == 2 && searched)
+	else if(item == 1 && searched)
 	{
 		last_search_key[id][0] = 0;
 		client_cmd(id, "say /last");
 	}
 	else
 	{
-		new idid = menu_indexes[id][searched == 1 ? num-3:num-2];
+		new num = searched == 1 ? item - 2 : item - 1;
+		new idid = menu_indexes[id][num];
 		copy(target_names[id], LEN_NAME, last_names[idid]);
 		copy(target_flex[id], LEN_FLEX, last_flex[idid]);
 		copy(target_ip[id], LEN_IP, last_ip[idid]);
 		target_ts[id] = last_ts[idid];
-		id_page[id][LAST] = num / 7;
+		id_page[id][LAST] = item / 7;
 		LastDetails(id);
 	}
 	
@@ -610,12 +620,11 @@ public LastDetails(id)
 	
 	menu_additem(menu, "\wVurni se kum spisuka", "1", 0);
 	menu_additem(menu, "\wZatvori menuto^n", "2", 0);
-	
-	if(id_flags[id] & ADMIN_VOTE)
-	{
-		menu_additem(menu, "\wBan", "3", 0);
-		menu_additem(menu, "\wGag", "4", 0);
-	}
+
+	menu_additem(menu, "\wBan", "3", 0);
+	menu_additem(menu, "\wGag", "4", 0);
+	menu_additem(menu, "\wCMD Ban^n", "5", 0);
+	menu_additem(menu, "\wKopirai v konzolata", "6", 0);
 	
 	menu_setprop(menu, MPROP_EXIT, MEXIT_NEVER);
 	menu_display(id, menu, 0);
@@ -640,12 +649,32 @@ public lastdetails_handler( id, menu, item )
 		
 		case 3:
 		{
-			console_cmd(id, "sr_addban ^"%s^" %s %s 1m", target_names[id], target_flex[id], target_ip[id]);
+			if(id_flags[id] & ADMIN_BAN ||
+			(id_flags[id] & ADMIN_VOTE && get_pcvar_num(vote_ban)))
+				console_cmd(id, "sr_addban ^"%s^" %s %s 1m", target_names[id], target_flex[id], target_ip[id]);
+			else LastDetails(id);
 		}
 		
 		case 4:
 		{
-			console_cmd(id, "sr_addgag ^"%s^" %s %s 1m", target_names[id], target_flex[id], target_ip[id]);
+			if(id_flags[id] & ADMIN_BAN ||
+			(id_flags[id] & ADMIN_VOTE && get_pcvar_num(vote_gag)))
+				console_cmd(id, "sr_addgag ^"%s^" %s %s 1m", target_names[id], target_flex[id], target_ip[id]);
+			else LastDetails(id);
+		}
+		
+		case 5:
+		{
+			if(id_flags[id] & ADMIN_BAN ||
+			(id_flags[id] & ADMIN_VOTE && get_pcvar_num(vote_ban)))
+				console_cmd(id, "sr_cmdban ^"%s^" dgs 1m", target_names[id]);
+			else LastDetails(id);
+		}
+		
+		case 6:
+		{
+			CopyToConsole(id, LAST);
+			LastDetails(id);
 		}
 	}
 	
@@ -659,7 +688,7 @@ public cmdSearchInLast(id, level, cid)
 	if(!cmd_access(id, level, cid, 1))
 		return PLUGIN_HANDLED;
 	
-	read_args(/*1, */last_search_key[id], LEN_NAME);
+	read_args(last_search_key[id], LEN_NAME);
 	remove_quotes(last_search_key[id]);
 	
 	console_cmd(id, "sr_last");

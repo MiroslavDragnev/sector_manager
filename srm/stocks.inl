@@ -334,6 +334,23 @@ stock UnixToString(const timestamp, const type)
 	return tm;
 }
 
+stock GetPunishmentTimeleft(timestamp)
+{
+	new timeleft[33], dd, hh, mm, ss;
+	
+	dd = timestamp / 86400;
+	timestamp -= dd*86400;
+	hh = timestamp / 3600;
+	timestamp -= hh*3600;
+	mm = timestamp / 60;
+	timestamp -= mm*60;
+	ss = timestamp;
+			
+	formatex(timeleft, charsmax(timeleft), "%i:%02d:%02d:%02d", dd, hh, mm, ss);
+	
+	return timeleft;
+}
+
 stock BubbleSort(const type)
 {
 	switch(type)
@@ -499,6 +516,50 @@ stock RemoveVipGag(const id)
 				
 				break;
 			}
+		}
+	}
+}
+
+stock CopyToConsole(const id, const type)
+{
+	switch(type)
+	{
+		case BAN:
+		{
+			new index = c_index[id];
+			
+			if(is_cmd_ban(ban_ip[index]))
+			{
+				console_print(id, "^"%s^" - -", ban_names[index]);
+				console_print(id, "sr_addban ^"%s^" - - 1m", ban_names[index]);
+				console_print(id, "sr_addgag ^"%s^" - - 1m", ban_names[index]);
+				console_print(id, "sr_cmdban ^"%s^" %s 1m", ban_names[index], ban_flex[index]);
+			}
+			else
+			{
+				console_print(id, "^"%s^" %s %s", ban_names[index], ban_flex[index], ban_ip[index]);
+				console_print(id, "sr_addban ^"%s^" %s %s 1m", ban_names[index], ban_flex[index], ban_ip[index]);
+				console_print(id, "sr_addgag ^"%s^" %s %s 1m", ban_names[index], ban_flex[index], ban_ip[index]);
+				console_print(id, "sr_cmdban ^"%s^" dgs 1m", ban_names[index]);
+			}
+		}
+		
+		case GAG:
+		{
+			new index = c_index[id];
+			
+			console_print(id, "^"%s^" %s %s", gag_names[index], gag_flex[index], gag_ip[index]);
+			console_print(id, "sr_addban ^"%s^" %s %s 1m", gag_names[index], gag_flex[index], gag_ip[index]);
+			console_print(id, "sr_addgag ^"%s^" %s %s 1m", gag_names[index], gag_flex[index], gag_ip[index]);
+			console_print(id, "sr_cmdban ^"%s^" dgs 1m", gag_names[index]);
+		}
+		
+		case LAST:
+		{
+			console_print(id, "^"%s^" %s %s", target_names[id], target_flex[id], target_ip[id]);
+			console_print(id, "sr_addban ^"%s^" %s %s 1m", target_names[id], target_flex[id], target_ip[id]);
+			console_print(id, "sr_addgag ^"%s^" %s %s 1m", target_names[id], target_flex[id], target_ip[id]);
+			console_print(id, "sr_cmdban ^"%s^" dgs 1m", target_names[id]);
 		}
 	}
 }

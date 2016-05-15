@@ -7,15 +7,13 @@ public cmdSrm(id, level, cid)
 	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#000000><th width=50%%> <font color=FFFFFF>Command</font> <th width=50%% align=left> <font color=FFFFFF>Usage</font>");
 	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> amx_gag, amx_ungag <th width=50%% align=left> |Name/#ID|");
 	len += formatex(buffer[len], 2047-len, "<tr align=left><th width=50%%> sr_who, sr_last <th width=50%% align=left> -");
-	//len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_slap <th width=50%% align=left> |Name/#ID| /Damage/");
 	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_slap, sr_slay, sr_kick, sr_quit, sr_swap, sr_spec <th width=50%% align=left> |Name/#ID|");
 	len += formatex(buffer[len], 2047-len, "<tr align=left><th width=50%%> sr_banlist, sr_gaglist, /banlist, /gaglist, /last <th width=50%% align=left> -");
-	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_cmdban <th width=50%% align=left> |Full Name (if offline)/Name/#ID| |Flags| |Time|");
+	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_cmdban <th width=50%% align=left> |Full Name| |Flags| |Time|");
 	len += formatex(buffer[len], 2047-len, "<tr align=left><th width=50%%> sr_ban, sr_gag <th width=50%% align=left> |Name/#ID| |Time| /Reason/");
 	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_addban, sr_addgag <th width=50%% align=left> |Full Name| |FlexID/-| |IP/-| |Time| /Reason/");
 	len += formatex(buffer[len], 2047-len, "<tr align=left><th width=50%%> sr_add_admin <th width=50%% align=left> |Full Name| |FlexID| |Level|");
 	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_remove_admin <th width=50%% align=left> |Full Name|");
-	//len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_admin_list <th width=50%% align=left> -");
 	len += formatex(buffer[len], 2047-len, "<tr align=left><th width=50%%> sr_admin_list, sr_clear_banlist, sr_clear_gaglist <th width=50%% align=left> -");
 	len += formatex(buffer[len], 2047-len, "<tr align=left bgcolor=#ECECEC><th width=50%%> sr_exec, sr_cvar <th width=50%% align=left> |Name/#ID| |Command|");
 	
@@ -426,12 +424,6 @@ public cmdSpec(id, level, cid)
 	if(player == id)
 		player = 0;
 	
-	switch(player)
-	{
-		case 0:console_print(id, "You are now a spectator (no target).");
-		default:console_print(id, "You are now spectating %s", id_name[player]);
-	}
-	
 	old_team[id] = cs_get_user_team(id);
 	
 	id_nextspec = id;
@@ -440,6 +432,12 @@ public cmdSpec(id, level, cid)
 	set_pev(id, pev_origin, Float:{9999.0, 9999.0, 9999.0});
 	user_silentkill(id);
 	cs_set_user_team(id, CS_TEAM_SPECTATOR);
+	
+	switch(player)
+	{
+		case 0:console_print(id, "You are now a spectator (no target).");
+		default:console_print(id, "You are now spectating %s", id_name[player]);
+	}
 	
 	set_task(1.0, "TaskSpec", TASK_SPEC+id, _, _, "b");
 	
@@ -459,26 +457,26 @@ public TaskSpec(id)
 		
 		switch(team)
 		{
-			case CS_TEAM_CT:
+			case CS_TEAM_CT:fix_score_team(id, "TERRORIST");
+			case CS_TEAM_T:
 			{
-				fix_score_team(id, "TERRORIST");
+				fix_score_team(id, "CT");
 				show_as = 2;
 			}
-			case CS_TEAM_T:fix_score_team(id, "CT");
 			default:fix_score_team(id, "TERRORIST");
 		}
 	} else fix_score_team(id, "TERRORIST");
 	
 	switch(show_as)
 	{
-		case 2:
+		case 1:
 		{
 			if(t_showdead)
 				send_ScoreAttrib(id, 1);
 			else
 				send_ScoreAttrib(id, 0);
 		}
-		default:
+		case 2:
 		{
 			if(ct_showdead)
 				send_ScoreAttrib(id, 1);
@@ -486,6 +484,12 @@ public TaskSpec(id)
 				send_ScoreAttrib(id, 0);
 		}
 	}
+}
+
+public cmdJoinTeam(id)
+{
+	if(task_exists(id+TASK_SPEC))
+		remove_task(id+TASK_SPEC);
 }
 /* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
 *{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1026\\ f0\\ fs16 \n\\ par }
