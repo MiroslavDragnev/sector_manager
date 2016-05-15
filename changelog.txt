@@ -1,0 +1,9 @@
+V10.4
+15.05.2016
+
+- fixed sr_spec not displaying dead/alive properly;
+- added CMD Ban option in /last;
+- added CMD Ban option in Admin Menu;
+- added ability to change the flags of an existing CMD Ban;
+- fixed pages in /banlist, /gaglist and /last not working properly;
+- added option to copy a ban/gag/last record to console.
