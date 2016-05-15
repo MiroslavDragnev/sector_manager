@@ -10,7 +10,7 @@
 #include <fakemeta>
 
 #define PLUGIN "Sector Manager"
-#define VERSION "10.1"
+#define VERSION "10.4 Stable"
 #define AUTHOR "DragonClaw"
 
 #define SYSTIME_END 2147483647
@@ -102,17 +102,17 @@ new id_spectator[33], ct_showdead, t_showdead;
 
 new const cmdmenu_commands[][] =
 {
-	"cmdmenu_slap", "cmdmenu_slay", "cmdmenu_kick", "cmdmenu_quit", "cmdmenu_swap", "cmdmenu_ban", "cmdmenu_gag"
+	"cmdmenu_slap", "cmdmenu_slay", "cmdmenu_kick", "cmdmenu_quit", "cmdmenu_swap", "cmdmenu_ban", "cmdmenu_gag", "cmdmenu_cmdban"
 };
 
 new const cmdmenu_functions[][] =
 {
-	"format_slap", "format_slay", "format_kick", "format_quit", "format_swap", "format_ban", "format_gag"
+	"format_slap", "format_slay", "format_kick", "format_quit", "format_swap", "format_ban", "format_gag", "format_cmdban"
 };
 
 new const cmdmenu_access[] =
 {
-	ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_VOTE, ADMIN_VOTE
+	ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_VOTE, ADMIN_VOTE, ADMIN_VOTE
 };
 
 #include "srm/mute.inl"
@@ -149,6 +149,8 @@ public plugin_init()
 	RegisterHam(Ham_Killed, "player", "HamPlayerKilled", 1);
 	register_logevent("RoundStart", 2, "1=Round_Start");
 	register_message( get_user_msgid( "DeathMsg" ), "MsgDeathMsg" );
+	
+	register_clcmd("jointeam", "cmdJoinTeam");
 	
 	register_clcmd("say", "handleSay");
 	register_clcmd("say_team", "handleSayTeam");
@@ -260,11 +262,6 @@ public plugin_init()
 			parse(data, ban_names[i], LEN_NAME, ban_flex[i], LEN_FLEX, ban_ip[i], LEN_IP, str_time, charsmax(str_time), ban_admin[i], LEN_NAME, ban_reason[i], LEN_REASON, str_ts, charsmax(str_ts));
 			ban_time[i] = str_to_num(str_time);
 			ban_ts[i] = str_to_num(str_ts);
-			
-			//towa e zaradi brilqntniq mi bug s 2038-ma godina
-			if(ban_ts[i] == SYSTIME_END)
-				ban_ts[i] = 1451606400;
-			
 		} else ban_ts[i] = SYSTIME_END;
 	}
 	
@@ -277,11 +274,6 @@ public plugin_init()
 			parse(data, gag_names[i], LEN_NAME, gag_flex[i], LEN_FLEX, gag_ip[i], LEN_IP, str_time, charsmax(str_time), gag_admin[i], LEN_NAME, gag_reason[i], LEN_REASON, str_ts, charsmax(str_ts));
 			gag_time[i] = str_to_num(str_time);
 			gag_ts[i] = str_to_num(str_ts);
-			
-			//towa e zaradi brilqntniq mi bug s 2038-ma godina
-			if(gag_ts[i] == SYSTIME_END)
-				gag_ts[i] = 1451606400;
-			
 		} else gag_ts[i] = SYSTIME_END;
 	}
 	
