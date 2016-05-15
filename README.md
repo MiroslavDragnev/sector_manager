@@ -1,5 +1,5 @@
 # Sector Manager by DragonClaw
-# Current version: 10.1 Stable
+# Current version: 10.4 Stable
 
 # Required modules
 - amxmodx
