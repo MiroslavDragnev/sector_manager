@@ -17,6 +17,25 @@ public handleSay(id)
 	if(SzMessages[0] == '@')
 		return PLUGIN_CONTINUE;
 	
+	if(equali(SzMessages, "/listen", 7) && id_flags[id] & ADMIN_SLAY)
+	{
+		switch(id_listen[id])
+		{
+			case true:
+			{
+				id_listen[id] = false;
+				ColorChat(id, RED, "[%s v%s]^x01 Listening has been disabled.", PLUGIN, VERSION);
+			}
+			case false:
+			{
+				id_listen[id] = true;
+				ColorChat(id, RED, "[%s v%s]^x01 Listening has been enabled.", PLUGIN, VERSION);
+			}
+		}
+		
+		return PLUGIN_HANDLED;
+	}
+	
 	if(ban_details[id])
 	{
 		new idid = c_index[id];
