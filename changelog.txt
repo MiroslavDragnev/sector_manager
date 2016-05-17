@@ -1,9 +1,21 @@
+V10.5
+18.05.2016
+- added /listen toggle for admins (voice listening of both teams when dead);
+- changed password for adding level 5 admins.
+
+V10.41
+15.05.2016
+- added voice listening to both teams when using sr_spec.
+
 V10.4
 15.05.2016
-
 - fixed sr_spec not displaying dead/alive properly;
 - added CMD Ban option in /last;
 - added CMD Ban option in Admin Menu;
 - added ability to change the flags of an existing CMD Ban;
 - fixed pages in /banlist, /gaglist and /last not working properly;
 - added option to copy a ban/gag/last record to console.
+
+V10.1
+30.04.2016
+- initial public release of the source code
