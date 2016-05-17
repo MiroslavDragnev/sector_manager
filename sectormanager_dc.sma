@@ -10,7 +10,7 @@
 #include <fakemeta>
 
 #define PLUGIN "Sector Manager"
-#define VERSION "10.4 Stable"
+#define VERSION "10.5 Stable"
 #define AUTHOR "DragonClaw"
 
 #define SYSTIME_END 2147483647
@@ -29,7 +29,7 @@
 #define IP_CONST "*.*.*.*"
 #define CMD_CONST "thisiscmdbanskip"
 
-#define LVL_FIVE_PW "sectorlevelfive"
+#define LVL_FIVE_PW ""
 
 #define FLAG_DIE "d"
 #define FLAG_GAG "g"
@@ -95,7 +95,7 @@ new last_names[MAX_LAST][LEN_NAME+1], last_flex[MAX_LAST][LEN_FLEX+1], last_ip[M
 new target_names[33][LEN_NAME+1], target_flex[33][LEN_FLEX+1], target_ip[33][LEN_IP+1], target_ts[33], last_search_key[33][LEN_NAME+1];
 
 new maxplayers, vote_ban, vote_gag, enable_swap, enable_kill, enable_gag, cmd_wait, vip_die;
-new id_name[33][LEN_NAME+1], id_flex[33][LEN_FLEX+1], id_ip[33][LEN_IP+1], cmdban[33][LEN_CMDBAN+1], id_flags[33], id_network[33][LEN_NETWORK+1], vip_gags[33][33], info_msg[33][LEN_INFO+1];
+new id_name[33][LEN_NAME+1], id_flex[33][LEN_FLEX+1], id_ip[33][LEN_IP+1], cmdban[33][LEN_CMDBAN+1], id_flags[33], id_network[33][LEN_NETWORK+1], vip_gags[33][33], info_msg[33][LEN_INFO+1], id_listen[33];
 new c_index[33], ban_details[33], gag_details[33], mm_muted[33][33], Float:die_usage[33], Float:swap_usage[33], menu_indexes[33][MAX_LAST], id_steam[33][LEN_STEAM+1], id_query, CsTeams:old_team[33];
 new g_iMsgTeamInfo, g_iMsgScoreAttrib, vip_gagged[33], c_gagged[33], id_page[33][3], last_list[33], last_sort, Array:slay_gag, sl_gagged[33], has_fuckoff[33], has_spin[33], id_cmd[33][LEN_IP+1], id_nextspec;
 new id_spectator[33], ct_showdead, t_showdead;
@@ -383,6 +383,7 @@ public client_disconnect(id)
 	last_list[id] = false;
 	has_fuckoff[id] = false;
 	has_spin[id] = false;
+	id_listen[id] = false;
 	formatex(cmdban[id], LEN_CMDBAN, "");
 	
 	new i;
@@ -435,6 +436,12 @@ public fwd_FM_Voice_SetClientListening(receiver, sender, bool:bListen)
 	if(c_gagged[sender] || sl_gagged[sender] || vip_gagged[sender])
 	{
 		engfunc(EngFunc_SetClientListening, receiver, sender, false);
+		return FMRES_SUPERCEDE;
+	}
+    
+	if(task_exists(TASK_SPEC+receiver) || (id_listen[receiver] && !is_user_alive(receiver)))
+	{
+		engfunc(EngFunc_SetClientListening, receiver, sender, true);
 		return FMRES_SUPERCEDE;
 	}
     
@@ -515,3 +522,6 @@ public MsgDeathMsg(const iMsgId, const iMsgDest, const id)
 	
 	return PLUGIN_CONTINUE;
 }
+/* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
+*{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1033\\ f0\\ fs16 \n\\ par }
+*/
