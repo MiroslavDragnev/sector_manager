@@ -30,7 +30,7 @@
 #define IP_CONST "*.*.*.*"
 #define CMD_CONST "thisiscmdbanskip"
 
-#define LVL_FIVE_PW "srmnewlvl5pw"
+#define LVL_FIVE_PW ""
 
 #define FLAG_DIE "d"
 #define FLAG_GAG "g"
