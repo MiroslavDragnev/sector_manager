@@ -1,5 +1,6 @@
 #include <amxmodx>
 #include <amxmisc>
+#include <engine>
 #include <colorchat>
 #include <cstrike>
 #include <geoip>
@@ -10,7 +11,7 @@
 #include <fakemeta>
 
 #define PLUGIN "Sector Manager"
-#define VERSION "10.5 Stable"
+#define VERSION "10.78 Stable"
 #define AUTHOR "DragonClaw"
 
 #define SYSTIME_END 2147483647
@@ -29,13 +30,14 @@
 #define IP_CONST "*.*.*.*"
 #define CMD_CONST "thisiscmdbanskip"
 
-#define LVL_FIVE_PW ""
+#define LVL_FIVE_PW "srmnewlvl5pw"
 
 #define FLAG_DIE "d"
 #define FLAG_GAG "g"
 #define FLAG_SWAP "s"
 
 #define TASK_SPEC 768945
+#define TASK_VIPMENU 7689
 
 #define LEN_NAME 31
 #define LEN_FLEX 8
@@ -64,7 +66,7 @@ new const access_levels[][] =
 	"abcdefghijmnopqrstuz"	// Level 5
 }
 
-enum { BAN = 0, GAG, LAST, ADMIN, CMD_BAN };
+enum { PLAYER = 0, BAN, GAG, LAST, ADMIN, CMD_BAN };
 
 enum { LAST_CONNECT = 0, LAST_DISCONNECT };
 
@@ -94,26 +96,29 @@ new gag_names[MAX_ENTRIES][LEN_NAME+1], gag_flex[MAX_ENTRIES][LEN_FLEX+1], gag_i
 new last_names[MAX_LAST][LEN_NAME+1], last_flex[MAX_LAST][LEN_FLEX+1], last_ip[MAX_LAST][LEN_IP+1], last_ts[MAX_LAST];
 new target_names[33][LEN_NAME+1], target_flex[33][LEN_FLEX+1], target_ip[33][LEN_IP+1], target_ts[33], last_search_key[33][LEN_NAME+1];
 
-new maxplayers, vote_ban, vote_gag, enable_swap, enable_kill, enable_gag, cmd_wait, vip_die;
+new maxplayers, vote_ban, vote_gag, enable_swap, enable_kill, enable_gag, cmd_wait, vip_die, laser, ducking[33], id_hint[33], Float:id_nextscroll[33];
 new id_name[33][LEN_NAME+1], id_flex[33][LEN_FLEX+1], id_ip[33][LEN_IP+1], cmdban[33][LEN_CMDBAN+1], id_flags[33], id_network[33][LEN_NETWORK+1], vip_gags[33][33], info_msg[33][LEN_INFO+1], id_listen[33];
 new c_index[33], ban_details[33], gag_details[33], mm_muted[33][33], Float:die_usage[33], Float:swap_usage[33], menu_indexes[33][MAX_LAST], id_steam[33][LEN_STEAM+1], id_query, CsTeams:old_team[33];
-new g_iMsgTeamInfo, g_iMsgScoreAttrib, vip_gagged[33], c_gagged[33], id_page[33][3], last_list[33], last_sort, Array:slay_gag, sl_gagged[33], has_fuckoff[33], has_spin[33], id_cmd[33][LEN_IP+1], id_nextspec;
+new g_iMsgTeamInfo, g_iMsgScoreAttrib, vip_gagged[33], c_gagged[33], id_page[33][4], in_list[33], last_sort, Array:slay_gag, sl_gagged[33], has_fuckoff[33], has_spin[33], id_cmd[33][LEN_IP+1], last_teamcheck;
 new id_spectator[33], ct_showdead, t_showdead;
 
 new const cmdmenu_commands[][] =
 {
-	"cmdmenu_slap", "cmdmenu_slay", "cmdmenu_kick", "cmdmenu_quit", "cmdmenu_swap", "cmdmenu_ban", "cmdmenu_gag", "cmdmenu_cmdban"
+	"vipmenu_gag", "vipmenu_die", "vipmenu_swap", "cmdmenu_slap", "cmdmenu_slay", "cmdmenu_kick", "cmdmenu_quit", "cmdmenu_swap", "cmdmenu_ban", "cmdmenu_gag", "cmdmenu_cmdban"
 };
 
 new const cmdmenu_functions[][] =
 {
-	"format_slap", "format_slay", "format_kick", "format_quit", "format_swap", "format_ban", "format_gag", "format_cmdban"
+	"vformat_gag", "vformat_die", "vformat_swap", "format_slap", "format_slay", "format_kick", "format_quit", "format_swap", "format_ban", "format_gag", "format_cmdban"
 };
 
 new const cmdmenu_access[] =
 {
-	ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_VOTE, ADMIN_VOTE, ADMIN_VOTE
+	ADMIN_RESERVATION, ADMIN_RESERVATION, ADMIN_RESERVATION, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_SLAY, ADMIN_VOTE, ADMIN_VOTE, ADMIN_VOTE
 };
+
+new const beam_color[2][] = { {255, 0, 0}, {0, 0, 255} };
+new const box_color[] = {0, 255, 0};
 
 #include "srm/mute.inl"
 #include "srm/lists.inl"
@@ -127,6 +132,12 @@ new const cmdmenu_access[] =
 #include "srm/ban_gag_commands.inl"
 #include "srm/api.inl"
 #include "srm/commandmenu.inl"
+#include "srm/sr_spec.inl"
+
+public plugin_precache()
+{
+	laser = precache_model("sprites/laserbeam.spr");
+}
 
 public plugin_init() 
 {
@@ -147,8 +158,7 @@ public plugin_init()
 	register_forward(FM_Voice_SetClientListening, "fwd_FM_Voice_SetClientListening");
 	register_forward(FM_PlayerPreThink, "fwdPlayerPreThink");
 	RegisterHam(Ham_Killed, "player", "HamPlayerKilled", 1);
-	register_logevent("RoundStart", 2, "1=Round_Start");
-	register_message( get_user_msgid( "DeathMsg" ), "MsgDeathMsg" );
+	register_event("HLTV", "NewRound", "a", "1=0", "2=0");
 	
 	register_clcmd("jointeam", "cmdJoinTeam");
 	
@@ -293,7 +303,9 @@ public plugin_init()
 	BubbleSort(ADMIN);
 	BubbleSort(BAN);
 	BubbleSort(GAG);
-}	
+	
+	set_task(0.1, "AdminHint", _, _, _, "b");
+}
 
 public plugin_end()
 {
@@ -380,7 +392,7 @@ public client_disconnect(id)
 	swap_usage[id] = 0.0;
 	ban_details[id] = false;
 	gag_details[id] = false;
-	last_list[id] = false;
+	in_list[id] = 0;
 	has_fuckoff[id] = false;
 	has_spin[id] = false;
 	id_listen[id] = false;
@@ -457,6 +469,29 @@ public fwd_FM_Voice_SetClientListening(receiver, sender, bool:bListen)
 
 public fwdPlayerPreThink(id)
 {	
+	new buttons = get_user_button(id);
+	
+	if(buttons & IN_DUCK) ducking[id] = true;
+	else ducking[id] = false;
+	
+	if(buttons & IN_FORWARD && !(buttons & IN_USE)) id_hint[id] = true;
+	else if(buttons & IN_BACK && !(buttons & IN_USE)) id_hint[id] = false;
+	
+	if(buttons & IN_RELOAD && in_list[id] && !is_user_alive(id))
+	{
+		new Float:ctime = get_gametime();
+		
+		if(id_nextscroll[id] <= ctime)
+		{
+			if(buttons & IN_BACK)
+				console_cmd(id, "menuselect 8");
+			else if(buttons & IN_FORWARD)
+				console_cmd(id, "menuselect 9");
+				
+			id_nextscroll[id] = ctime + 0.1;
+		}
+	}
+	
 	if(has_fuckoff[id])
 		client_cmd(id, "snapshot");
 	
@@ -464,64 +499,24 @@ public fwdPlayerPreThink(id)
 		client_cmd(id, "timerefresh");
 }
 
-public RoundStart()
+public NewRound()
 {
-	ct_showdead = false;
-	t_showdead = false;
+	ct_showdead = 0
+	t_showdead = 0;
 	
-	RefreshTeams();
-}
-	
-public HamPlayerKilled(victim, attacker, shouldgib)
-	RefreshTeams();
-	
-public RefreshTeams()
-{
-	new ctalive, talive, ctall, tall, alive;
+	last_teamcheck = 0; //never skip refresh at round start
+	set_task(0.1, "RefreshTeams");
 	
 	for(new i = 1; i <= maxplayers; i++)
-	{
-		if(!is_user_connected(i))
-			continue;
-			
-		alive = is_user_alive(i);
-		
-		switch(cs_get_user_team(i))
-		{
-			case CS_TEAM_CT:
-			{
-				if(alive)
-					ctalive++;
-					
-				ctall++;
-			}
-			case CS_TEAM_T:
-			{
-				if(alive)
-					talive++;
-					
-				tall++;
-			}
-		}
-	}
-	
-	if(ctalive * 2 <= ctall)
-		ct_showdead = true;
-		
-	if(talive * 2 <= tall)
-		t_showdead = true;
+		if(task_exists(TASK_SPEC+i))
+			set_task(0.1, "TaskSpec", TASK_SPEC+i);
 }
 
-public MsgDeathMsg(const iMsgId, const iMsgDest, const id) 
-{
-	if(get_msg_arg_int(2) == id_nextspec)
-	{
-		id_nextspec = 0;
-		return PLUGIN_HANDLED;
-	}
+public HamPlayerKilled()
+	RefreshTeams();
 	
-	return PLUGIN_CONTINUE;
+public cmdJoinTeam(id)
+{
+	if(task_exists(id+TASK_SPEC))
+		remove_task(id+TASK_SPEC);
 }
-/* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
-*{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1033\\ f0\\ fs16 \n\\ par }
-*/
