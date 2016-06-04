@@ -29,6 +29,8 @@ public cmdBanList(id, level, cid)
 	menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
 	menu_display(id, menu, id_page[id][BAN]);
 	
+	in_list[id] = BAN;
+	
 	return PLUGIN_HANDLED;
 }
 
@@ -36,17 +38,19 @@ public banlist_handler(id,menu,item)
 {
 	if(item == MENU_EXIT)
 	{
+		in_list[id] = 0;
 		menu_destroy(menu)
 		return PLUGIN_HANDLED
 	}
 	
-	new access,callback, info[3];
-	menu_item_getinfo(menu,item,access, info,2, _,_, callback)
+	new access, callback, info[3];
+	menu_item_getinfo(menu, item, access, info, 2, _, _, callback);
 	
 	c_index[id] = menu_indexes[id][item];
 	id_page[id][BAN] = item / 7;
 	ban_details[id] = true;
 	BanDetails(id);
+	in_list[id] = 0;
 	menu_destroy(menu);
 	
 	return PLUGIN_HANDLED
@@ -291,6 +295,8 @@ public cmdGagList(id, level, cid)
 	menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
 	menu_display(id, menu, id_page[id][GAG]);
 	
+	in_list[id] = GAG;
+	
 	return PLUGIN_HANDLED;
 }
 
@@ -298,6 +304,7 @@ public gaglist_handler(id,menu,item)
 {
 	if(item == MENU_EXIT)
 	{
+		in_list[id] = 0;
 		menu_destroy(menu)
 		return PLUGIN_HANDLED
 	}
@@ -309,6 +316,7 @@ public gaglist_handler(id,menu,item)
 	id_page[id][GAG] = item / 7;
 	gag_details[id] = true;
 	GagDetails(id);
+	in_list[id] = 0;
 	menu_destroy(menu);
 	
 	return PLUGIN_HANDLED
@@ -501,8 +509,6 @@ public cmdSayLast(id, level, cid)
 	if(!cmd_access(id, level, cid, 1))
 		return PLUGIN_HANDLED;
 	
-	last_list[id] = true;
-	
 	new menu = menu_create("\wSpisukut se obnovqva avtomatichno^n^n\rLast:^n\wIzberi ime za poveche opcii^n\rStranica: \w", "lastlist_handler");
 	
 	new item[64], count_str[3], count, key[LEN_NAME+1];
@@ -561,18 +567,21 @@ public cmdSayLast(id, level, cid)
 	}
 	
 	menu_setprop(menu, MPROP_EXIT, MEXIT_ALL);
+	menu_setprop(menu, MPROP_BACKNAME, "Go Back");
 	menu_display(id, menu, searched == 1 ? 0:id_page[id][LAST]);
+	
+	in_list[id] = LAST;
 	
 	return PLUGIN_HANDLED;
 }
 
 public lastlist_handler(id,menu,item)
-{
+{	
 	if(item == MENU_EXIT)
 	{
-		last_list[id] = false;
-		menu_destroy(menu)
-		return PLUGIN_HANDLED
+		in_list[id] = 0;
+		menu_destroy(menu);
+		return PLUGIN_HANDLED;
 	}
 	
 	new access,callback, info[3];
@@ -604,7 +613,7 @@ public lastlist_handler(id,menu,item)
 		LastDetails(id);
 	}
 	
-	last_list[id] = false;
+	in_list[id] = 0;
 	menu_destroy(menu);
 	
 	return PLUGIN_HANDLED;

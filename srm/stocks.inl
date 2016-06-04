@@ -494,7 +494,7 @@ stock BubbleSort(const type)
 			}
 			
 			for(i = 1; i <= maxplayers; i++)
-				if(last_list[i])
+				if(in_list[i] == LAST)
 					client_cmd(i, "say /last");
 					
 			last_sort = get_systime() + 3;
@@ -518,6 +518,19 @@ stock RemoveVipGag(const id)
 			}
 		}
 	}
+}
+
+stock HasMoreGags(const id)
+{
+	for(new i = 0; i < 3; i++)
+	{
+		if(vip_gags[id][i] == 0)
+		{
+			return i;
+		}
+	}
+	
+	return -1;
 }
 
 stock CopyToConsole(const id, const type)

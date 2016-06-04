@@ -243,17 +243,7 @@ public cmdVipGag(id, level, cid)
 		return PLUGIN_HANDLED;
 	}
 	
-	new empty = -1;
-		
-	for(new i = 0; i < 3; i++)
-	{
-		if(vip_gags[id][i] == 0)
-		{
-			empty = i;
-				
-			break;
-		}
-	}
+	new empty = HasMoreGags(id);
 	
 	if(empty == -1)
 	{

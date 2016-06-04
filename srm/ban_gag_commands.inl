@@ -50,7 +50,7 @@ public cmdBan(id, level, cid)
 	c_index[id] = idid;
 	ban_details[id] = true;
 	gag_details[id] = false;
-	last_list[id] = false;
+	in_list[id] = 0;
 	BanDetails(id);
 	
 	#if defined LOG_ENABLED
@@ -123,7 +123,7 @@ public cmdGag(id, level, cid)
 	c_index[id] = idid;
 	ban_details[id] = false;
 	gag_details[id] = true;
-	last_list[id] = false;
+	in_list[id] = 0;
 	GagDetails(id);
 	
 	#if defined LOG_ENABLED
@@ -216,7 +216,7 @@ public cmdCmdBan(id, level, cid)
 	c_index[id] = idid;
 	ban_details[id] = true;
 	gag_details[id] = false;
-	last_list[id] = false;
+	in_list[id] = 0;
 	BanDetails(id);
 	
 	#if defined LOG_ENABLED

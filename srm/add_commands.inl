@@ -63,14 +63,11 @@ public cmdAddBan(id, level, cid)
 	
 	console_print(id, "Igrachut e uspeshno bannat.");
 	
-	if(id > 0)
-	{
-		c_index[id] = idid;
-		ban_details[id] = true;
-		gag_details[id] = false;
-		last_list[id] = false;
-		BanDetails(id);
-	}
+	c_index[id] = idid;
+	ban_details[id] = true;
+	gag_details[id] = false;
+	in_list[id] = 0;
+	BanDetails(id);
 	
 	#if defined LOG_ENABLED
 	log_to_file(srm_log, "%s addbanned %s (flex: %s; ip: %s; time: %s)", id_name[id], arg, arg2, arg3, arg4);
@@ -147,7 +144,7 @@ public cmdAddGag(id, level, cid)
 	c_index[id] = idid;
 	ban_details[id] = false;
 	gag_details[id] = true;
-	last_list[id] = false;
+	in_list[id] = 0;
 	GagDetails(id);
 	
 	#if defined LOG_ENABLED

@@ -17,7 +17,7 @@ public handleSay(id)
 	if(SzMessages[0] == '@')
 		return PLUGIN_CONTINUE;
 	
-	if(equali(SzMessages, "/listen", 7) && id_flags[id] & ADMIN_SLAY)
+	if(equali(SzMessages, "/listen", 7) && id_flags[id] & ADMIN_BAN)
 	{
 		switch(id_listen[id])
 		{

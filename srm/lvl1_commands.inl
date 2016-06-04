@@ -29,7 +29,7 @@ public cmdSrm2(id, level, cid)
 	if(!cmd_access(id, level, cid, 1))
 		return PLUGIN_HANDLED;
 	
-	new i, count[4], buffer[2048];
+	new i, count[5], buffer[2048];
 	
 	for(i = 0; i < MAX_ADMINS; i++)
 	{
@@ -419,77 +419,39 @@ public cmdSpec(id, level, cid)
 		return PLUGIN_HANDLED;
 	}
 	
-	new player = cmd_target(id, arg, CMDTARGET_NO_BOTS);
+	new player = cmd_target(id, arg/*, CMDTARGET_NO_BOTS*/);
 	
 	if(player == id)
 		player = 0;
 	
 	old_team[id] = cs_get_user_team(id);
-	
-	id_nextspec = id;
 	id_spectator[id] = player;
-	
-	set_pev(id, pev_origin, Float:{9999.0, 9999.0, 9999.0});
-	user_silentkill(id);
 	cs_set_user_team(id, CS_TEAM_SPECTATOR);
+	set_pev(id, pev_solid, SOLID_NOT);
+	set_pev(id, pev_movetype, MOVETYPE_FLY);
+	set_pev(id, pev_effects, EF_NODRAW);
+	set_pev(id, pev_deadflag, DEAD_DEAD);
+	set_task(0.1, "TaskSpec", TASK_SPEC+id);
 	
 	switch(player)
 	{
 		case 0:console_print(id, "You are now a spectator (no target).");
-		default:console_print(id, "You are now spectating %s", id_name[player]);
+		default:
+		{
+			console_print(id, "You are now spectating %s", id_name[player]);
+			
+			//this does not work at all...
+			//set_pev(id, pev_iuser1, 4);
+			//set_pev(id, pev_iuser2, player);
+		}
 	}
+	
+	set_pev(id, pev_iuser1, 4);
+	id_hint[id] = false;
 	
 	set_task(1.0, "TaskSpec", TASK_SPEC+id, _, _, "b");
 	
 	return PLUGIN_HANDLED;
-}
-
-public TaskSpec(id)
-{
-	id -= TASK_SPEC;
-	
-	new show_as = 1;
-	
-	if(id_spectator[id] != 0)
-	{
-		new CsTeams:team;
-		team = cs_get_user_team(id_spectator[id]);
-		
-		switch(team)
-		{
-			case CS_TEAM_CT:fix_score_team(id, "TERRORIST");
-			case CS_TEAM_T:
-			{
-				fix_score_team(id, "CT");
-				show_as = 2;
-			}
-			default:fix_score_team(id, "TERRORIST");
-		}
-	} else fix_score_team(id, "TERRORIST");
-	
-	switch(show_as)
-	{
-		case 1:
-		{
-			if(t_showdead)
-				send_ScoreAttrib(id, 1);
-			else
-				send_ScoreAttrib(id, 0);
-		}
-		case 2:
-		{
-			if(ct_showdead)
-				send_ScoreAttrib(id, 1);
-			else
-				send_ScoreAttrib(id, 0);
-		}
-	}
-}
-
-public cmdJoinTeam(id)
-{
-	if(task_exists(id+TASK_SPEC))
-		remove_task(id+TASK_SPEC);
 }
 /* AMXX-Studio Notes - DO NOT MODIFY BELOW HERE
 *{\\ rtf1\\ ansi\\ deff0{\\ fonttbl{\\ f0\\ fnil Tahoma;}}\n\\ viewkind4\\ uc1\\ pard\\ lang1026\\ f0\\ fs16 \n\\ par }
