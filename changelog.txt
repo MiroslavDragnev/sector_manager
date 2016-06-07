@@ -1,3 +1,8 @@
+V10.8
+06.06.2016
+- added alternative command for opening the V.I.P. menu - say /vipmenu
+- added shortcut commands for the player menus - /gag, /swap, /die
+
 V10.78
 04.06.2016
 - added a V.I.P. menu with autoupdate and page saving.
