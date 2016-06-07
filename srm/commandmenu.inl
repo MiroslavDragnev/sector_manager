@@ -1,3 +1,37 @@
+public cmdScVipMenu(id, level, cid)
+{
+	if(!cmd_access(id, level, cid, 1))
+	{
+		ColorChat(id, GREEN, "[Sector.BG]^x01 Samo V.I.P. igrachite imat dostup do tova menu.");
+		return PLUGIN_HANDLED;
+	}
+	
+	new menu = menu_create("\wV\r.\wI\r.\wP\r.\w Menu", "vipmenu_common_handler");
+	
+	menu_additem(menu, "Gag", "1", 0);
+	menu_additem(menu, "Die", "2", 0);
+	menu_additem(menu, "Swap^n", "3", 0);
+	menu_additem(menu, "Exit", "4", 0);
+	
+	menu_setprop(menu, MPROP_EXIT, MEXIT_NEVER);
+	menu_display(id, menu, 0);
+	
+	return PLUGIN_CONTINUE;
+}
+
+public vipmenu_common_handler(id,menu,item)
+{
+	switch(item)
+	{
+		case 0:client_cmd(id, "say /gag");
+		case 1:client_cmd(id, "say /die");
+		case 2:client_cmd(id, "say /swap");
+	}
+	
+	menu_destroy(menu);
+	return PLUGIN_HANDLED;
+}
+
 public vformat_gag(id, level, cid)
 {
 	if(!cmd_access(id, level, cid, 1)) return PLUGIN_HANDLED;
