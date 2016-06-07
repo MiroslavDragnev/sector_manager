@@ -215,8 +215,8 @@ public VipMenu(id)
 	
 	new startindex = id_page[id][PLAYER]*6, endindex = startindex+6, plr;
 	
-	formatex(item, charsmax(item), "Exit");
-	menu_additem(menu, item, "menuexit", 0);
+	//formatex(item, charsmax(item), "Exit");
+	menu_additem(menu, "Exit", "menuexit", 0);
 	
 	formatex(item, charsmax(item), "%sBack", startindex > 0 ? "\w":"\d");
 	menu_additem(menu, item, "menuback", 0);
