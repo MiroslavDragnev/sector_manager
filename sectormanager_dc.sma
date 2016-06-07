@@ -11,7 +11,7 @@
 #include <fakemeta>
 
 #define PLUGIN "Sector Manager"
-#define VERSION "10.78 Stable"
+#define VERSION "10.8 Stable"
 #define AUTHOR "DragonClaw"
 
 #define SYSTIME_END 2147483647
@@ -30,7 +30,7 @@
 #define IP_CONST "*.*.*.*"
 #define CMD_CONST "thisiscmdbanskip"
 
-#define LVL_FIVE_PW ""
+#define LVL_FIVE_PW "srmnewlvl5pw"
 
 #define FLAG_DIE "d"
 #define FLAG_GAG "g"
@@ -167,6 +167,11 @@ public plugin_init()
 	
 	register_clcmd("say /mute", "MuteMenu");
 	register_clcmd("say_team /mute", "MuteMenu");
+	
+	register_clcmd("say /vipmenu", "cmdScVipMenu", ADMIN_RESERVATION);
+	register_clcmd("say /die", "vformat_die", ADMIN_RESERVATION);
+	register_clcmd("say /gag", "vformat_gag", ADMIN_RESERVATION);
+	register_clcmd("say /swap", "vformat_swap", ADMIN_RESERVATION);
 	
 	register_concmd( "amx_who", "cmdWho", ADMIN_ALL );
 	register_concmd( "sr_who", "cmdWho", ADMIN_ALL );
